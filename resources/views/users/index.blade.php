@@ -2,9 +2,9 @@
     <div class="py-12">
         <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex items-center justify-between mb-6">
-                <h1 class="text-3xl font-bold text-gray-900">Roles Management</h1>
-                <a href="{{ route('roles.create') }}" class="inline-flex items-center px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Create New Role
+                <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+                <a href="{{ route('users.create') }}" class="inline-flex items-center px-4 py-2 text-xs font-semibold tracking-widest text-white uppercase transition duration-150 ease-in-out bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    Create New User
                 </a>
             </div>
 
@@ -21,33 +21,35 @@
                             <thead>
                                 <tr class="font-bold text-left bg-gray-100">
                                     <th class="px-4 py-3">Name</th>
-                                    <th class="px-4 py-3">Permissions</th>
+                                    <th class="px-4 py-3">Email</th>
+                                    <th class="px-4 py-3">Roles</th>
                                     <th class="px-4 py-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($roles as $role)
+                                @forelse($users as $user)
                                     <tr class="border-b hover:bg-gray-100">
                                         <td class="px-4 py-3">
-                                            <a href="{{ route('roles.show', $role) }}" class="text-nuetral-600 hover:text-indigo-900">
-                                                {{ $role->name }}
+                                            <a href="{{ route('users.show', $user) }}" class="text-neutral-600 hover:text-indigo-900">
+                                                {{ $user->name }}
                                             </a>
                                         </td>
+                                        <td class="px-4 py-3">{{ $user->email }}</td>
                                         <td class="px-4 py-3">
-                                            @foreach($role->permissions as $permission)
+                                            @foreach($user->roles as $role)
                                                 <span class="inline-block px-2 py-1 mb-1 mr-1 text-xs bg-indigo-100 rounded-full text-neutral-800">
-                                                    {{ $permission->name }}
+                                                    {{ $role->name }}
                                                 </span>
                                             @endforeach
                                         </td>
                                         <td class="flex px-4 py-3 space-x-2">
-                                            <a href="{{ route('roles.edit', $role) }}" class="text-nuetral-600 hover:text-indigo-900">
+                                            <a href="{{ route('users.edit', $user) }}" class="text-neutral-600 hover:text-indigo-900">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                                                     <path fill-rule="evenodd" d="M2 16V6h4V2H2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-4h-4v4H2z" clip-rule="evenodd" />
                                                 </svg>
                                             </a>
-                                            <form action="{{ route('roles.destroy', $role) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this role?');">
+                                            <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900">
@@ -60,8 +62,8 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="3" class="px-4 py-3 text-center text-gray-500">
-                                            No roles found.
+                                        <td colspan="4" class="px-4 py-3 text-center text-gray-500">
+                                            No users found.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -70,7 +72,7 @@
                     </div>
 
                     <div class="mt-4">
-                        {{ $roles->links() }}
+                        {{ $users->links() }}
                     </div>
                 </div>
             </div>
