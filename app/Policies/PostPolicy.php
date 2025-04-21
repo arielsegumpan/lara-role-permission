@@ -9,86 +9,136 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PostPolicy
 {
-
     use HandlesAuthorization;
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(?User $user, Post $post): bool
-    {
-        return true;
-    }
 
     /**
-     * Determine whether the user can view the model.
+     * Determine whether the user can view the post.
      */
-    public function view(User $user, Post $post): bool
+    public function view(User $user, Post $post)
     {
-        if($user === null){
-            return false;
-        }
-
-
-
-        return $user->id == $post->user_id;
-
-        // return true;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return $user->hasAnyRole(['admin', 'manager', 'editor', 'author', 'contributor']);
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Post $post): bool
-    {
-         // Admin and manager can edit all posts
-         if ($user->hasAnyRole(['admin', 'manager', 'editor'])) {
+        // Check if the user can 'view' any post or a specific post
+        if ($user->hasRole('admin')) {
             return true;
         }
 
-        // Author can edit their own posts
-        return $user->hasRole('author') && $user->id === $post->user_id;
+        if ($user->hasRole('editor') && $user->can('view posts')) {
+            return true;
+        }
+
+        // Check if the user owns the post (for authors)
+        if ($user->hasRole('author') && $user->id === $post->user_id) {
+            return true;
+        }
+
+        return $user->can('view posts');
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determine whether the user can view any post.
      */
-    public function delete(User $user, Post $post): bool
+    public function viewAny(User $user)
     {
-        // Admin and manager can delete all posts
-        if ($user->hasAnyRole(['admin', 'manager'])) {
+        // Admin or Editor can view all posts
+        if ($user->hasRole('admin') || $user->hasRole('editor')) {
+            return true;
+        }
+
+        return $user->can('view any posts');
+    }
+
+    /**
+     * Determine whether the user can create a post.
+     */
+    public function create(User $user)
+    {
+        // Admin and Editor can create posts
+        if ($user->hasRole('admin') || $user->hasRole('editor')) {
+            return true;
+        }
+
+        // Check if user has permission to create posts
+        return $user->can('create posts');
+    }
+
+    /**
+     * Determine whether the user can update the post.
+     */
+    public function update(User $user, Post $post)
+    {
+        // Admin can update any post
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        // Editor can update any post
+        if ($user->hasRole('editor') && $user->can('update posts')) {
+            return true;
+        }
+
+        // Author can only update their own posts
+        if ($user->hasRole('author') && $user->id === $post->user_id) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine whether the user can delete the post.
+     */
+    public function delete(User $user, Post $post)
+    {
+        // Admin can delete any post
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        // Editor can delete any post
+        if ($user->hasRole('editor') && $user->can('delete posts')) {
             return true;
         }
 
         // Author can delete their own posts
-        return $user->hasRole('author') && $user->id === $post->user_id;
-    }
+        if ($user->hasRole('author') && $user->id === $post->user_id) {
+            return true;
+        }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Post $post): bool
-    {
         return false;
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can restore the post.
      */
-    public function forceDelete(User $user, Post $post): bool
+    public function restore(User $user, Post $post)
     {
+        // Admin can restore any post
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        // Editor can restore any post
+        if ($user->hasRole('editor') && $user->can('restore posts')) {
+            return true;
+        }
+
         return false;
     }
 
-    public function publish(User $user): bool
+    /**
+     * Determine whether the user can permanently delete the post.
+     */
+    public function forceDelete(User $user, Post $post)
     {
-        return $user->hasAnyRole(['admin', 'manager', 'editor']);
+        // Admin can permanently delete any post
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        // Editor can permanently delete any post
+        if ($user->hasRole('editor') && $user->can('force delete posts')) {
+            return true;
+        }
+
+        return false;
     }
 }

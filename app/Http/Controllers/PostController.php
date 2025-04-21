@@ -9,24 +9,32 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PostController extends Controller
 {
-    // public function __construct()
-    // {
-    //     // Apply policies to methods
-    //     $this->authorizeResource(Post::class, 'post');
-    // }
-
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $posts = Post::with('author')
-            ->published()
-            ->latest('published_at')
-            ->paginate(10);
+        $this->authorize('view any posts', Post::class);
+
+        $user = Auth::user();
+
+        // Default: Show only published posts
+        $query = Post::with('author')->where('is_published', true);
+
+        if ($user->hasRole('admin')) {
+            // Admin: See all posts
+            $query = Post::with('author');
+        } elseif ($user->hasRole('editor')) {
+            // Editor: See only their own posts
+            $query = Post::with('author')->where('user_id', $user->id);
+        }
+
+        $posts = $query->latest('published_at')->orderBy('created_at', 'desc')->paginate(10);
 
         return view('posts.index', compact('posts'));
     }
@@ -36,6 +44,8 @@ class PostController extends Controller
      */
     public function create()
     {
+        $this->authorize('create posts', Post::class);
+
         return view('posts.create');
     }
 
@@ -44,6 +54,8 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create posts', Post::class);
+
         $request->merge([
             'is_published' => $request->has('is_published') ? 1 : 0
         ]);
@@ -94,6 +106,8 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
+        $this->authorize('view posts', $post);
+
         // Only show published posts or posts sang author
         if (!$post->is_published && $post->user_id !== Auth::id()) {
             abort(403);
@@ -107,6 +121,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
+        $this->authorize('update posts', $post);
 
          return view('posts.edit', compact('post'));
     }
@@ -116,6 +131,8 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
+        $this->authorize('update', $post);
+
         $request->merge([
             'is_published' => $request->has('is_published') ? 1 : 0
         ]);
@@ -185,7 +202,7 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         // Ensure only the author or an admin can delete
-        $this->authorize('delete', $post);
+        $this->authorize('delete posts', $post);
 
         // Delete featured image if exists
         if ($post->ft_image) {
@@ -196,15 +213,5 @@ class PostController extends Controller
 
         return redirect()->route('posts.index')
             ->with('success', 'Post deleted successfully.');
-    }
-
-
-    public function publish(Post $post)
-    {
-        // $this->authorize('publish', $post);
-
-        $post->update(['published_at' => now()]);
-
-        return redirect()->route('posts.show', $post);
     }
 }

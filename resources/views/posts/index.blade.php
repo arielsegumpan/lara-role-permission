@@ -4,9 +4,11 @@
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
                 {{ __('Blog Posts') }}
             </h2>
+            @can('create posts')
             <a href="{{ route('posts.create') }}" class="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600">
                 {{ __('Create New Post') }}
             </a>
+            @endcan
         </div>
     </x-slot>
 
@@ -76,14 +78,20 @@
                                             <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                                                 @if(auth()->id() == $post->user_id)
                                                     <div class="flex justify-end space-x-2">
+                                                        @can('view posts', $post)
                                                         <a href="{{ route('posts.show', $post) }}"
                                                            class="text-blue-500 hover:text-blue-700">
                                                             View
                                                         </a>
+                                                        @endcan
+
+                                                        @can('update posts', $post)
                                                         <a href="{{ route('posts.edit', $post) }}"
                                                            class="text-yellow-500 hover:text-yellow-700">
                                                             Edit
                                                         </a>
+                                                        @endcan
+                                                        @can('delete posts', $post)
                                                         <form action="{{ route('posts.destroy', $post) }}"
                                                               method="POST"
                                                               onsubmit="return confirm('Are you sure?');"
@@ -95,6 +103,7 @@
                                                                 Delete
                                                             </button>
                                                         </form>
+                                                        @endcan
                                                     </div>
                                                 @endif
                                             </td>
