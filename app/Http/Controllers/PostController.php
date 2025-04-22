@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Storage;
+use App\Models\Tag;
 use App\Models\Post;
+use App\Models\Category;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -24,7 +26,7 @@ class PostController extends Controller
         $user = Auth::user();
 
         // Default: Show only published posts
-        $query = Post::with('author')->where('is_published', true);
+        $query = Post::with(['author', 'category', 'tags'])->where('is_published', true);
 
         if ($user->hasRole('admin')) {
             // Admin: See all posts
@@ -44,9 +46,10 @@ class PostController extends Controller
      */
     public function create()
     {
-        $this->authorize('create posts', Post::class);
-
-        return view('posts.create');
+        $this->authorize('create posts', [Post::class, Category::class, Tag::class]);
+        $categories = Category::all();
+        $tags = Tag::all();
+        return view('posts.create', compact('categories', 'tags'));
     }
 
     /**

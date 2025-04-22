@@ -32,6 +32,27 @@
                             <x-input-error class="mt-2" :messages="$errors->get('ft_image')" />
                         </div>
 
+                        <div class="mb-6">
+                            <x-input-label for="category_id" :value="__('Category')" />
+                            <select name="category_id" class="block w-full mt-1 text-gray-500 border-gray-300 rounded">
+                                <option value="">Select Category</option>
+                                @foreach ($categories as $category)
+                                    <option class="text-gray-500" value="{{ $category->id }}">{{ $category->cat_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-12">
+                            <x-input-label :value="__('Tags')" />
+                            @foreach ($tags as $tag)
+                                <label class="inline-flex items-center mr-4">
+                                    <input type="checkbox" name="tags[]" value="{{ $tag->id }}" class="border-gray-300 rounded">
+                                    <span class="ml-2 text-gray-700">{{ $tag->tag_name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+
+
                         <div class="mb-4">
                             <label class="inline-flex items-center">
                                 <input type="checkbox" name="is_published"
